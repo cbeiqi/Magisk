@@ -67,10 +67,10 @@ support_abis = {
     "x86_64": "x86_64-linux-android",
     "riscv64": "riscv64-linux-android",
 }
-default_archs = {"armeabi-v7a", "x86", "arm64-v8a", "x86_64"}
-default_targets = {"magisk", "magiskinit", "magiskboot", "magiskpolicy"}
+default_archs = {"arm64-v8a"}
+default_targets = {"magisk","resetprop"}
 support_targets = default_targets | {"resetprop"}
-rust_targets = {"magisk", "magiskinit", "magiskboot", "magiskpolicy"}
+rust_targets = {"magisk"}
 ondk_version = "r28.5"
 
 # Global vars
