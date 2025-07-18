@@ -58,12 +58,10 @@ jobs:
         run: chmod +x build.py
 
       - name: Build NDK
-        run: |
-          ./ build.py ndk
+        run: ./build.py ndk
 
       - name: Build resetprop only
-        run: |
-          ./ build.py native
+        run: ./build.py native
         env:
           ANDROID_NDK_HOME: ${{ env.ANDROID_NDK_HOME }}
           PATH: ${{ env.ANDROID_NDK_HOME }}/toolchains/llvm/prebuilt/linux-x86_64/bin:$PATH
