@@ -59,11 +59,11 @@ jobs:
 
       - name: Build NDK
         run: |
-          python3 build.py ndk
+          ./ build.py ndk
 
       - name: Build resetprop only
         run: |
-          python3 build.py native
+          ./ build.py native
         env:
           ANDROID_NDK_HOME: ${{ env.ANDROID_NDK_HOME }}
           PATH: ${{ env.ANDROID_NDK_HOME }}/toolchains/llvm/prebuilt/linux-x86_64/bin:$PATH
