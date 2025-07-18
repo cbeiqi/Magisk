@@ -1,40 +1,75 @@
-name: Magisk Build
+name: Build resetprop
 
 on:
   push:
-    branches: [master]
-    paths:
-      - "app/**"
-      - "native/**"
-      - "build.py"
-      - ".github/workflows/build.yml"
+    branches: [ master ]
   pull_request:
-    branches: [master]
+    branches: [ master ]
   workflow_dispatch:
 
 jobs:
   build:
-    name: Build Magisk artifacts
-    runs-on: macos-15
-    strategy:
-      fail-fast: false
+    runs-on: ubuntu-latest
+
+    env:
+      ANDROID_NDK_VERSION: r28.5
+      ANDROID_NDK_HOME: ${{ github.workspace }}/.ndk
+
     steps:
-      - name: Check out
+      - name: Checkout source
         uses: actions/checkout@v4
         with:
-          submodules: "recursive"
+          submodules: recursive
 
-      - name: Setup environment
-        uses: ./.github/actions/setup
+      - name: Cache Android NDK
+        uses: actions/cache@v3
         with:
-          is-asset-build: true
+          path: ${{ github.workspace }}/.ndk
+          key: ndk-${{ env.ANDROID_NDK_VERSION }}-${{ runner.os }}
 
-      - name: Build release
-        run: ./build.py -vr native
+      - name: Download Android NDK (if not cached)
+        run: |
+          if [ ! -f "${ANDROID_NDK_HOME}/build/cmake/android.toolchain.cmake" ]; then
+            mkdir -p "${ANDROID_NDK_HOME}"
+            curl -L "https://github.com/topjohnwu/ondk/releases/download/${ANDROID_NDK_VERSION}/ondk-${ANDROID_NDK_VERSION}-linux.tar.xz" |
+              tar -xJ -C "${ANDROID_NDK_HOME}" --strip-components=1
+          fi
 
-      - name: Upload build artifact
+      - name: Install Rust and target
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android
+
+      - name: Cache Cargo Registry
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: cargo-${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Cache cxx-rs (Rust C++ bridge)
+        uses: actions/cache@v3
+        with:
+          path: native/src/external/cxx-rs
+          key: cxx-rs-${{ hashFiles('native/src/base/Cargo.toml') }}
+
+      - name: Set executable permission for build script
+        run: chmod +x build.py
+
+      - name: Build NDK
+        run: |
+          python3 build.py ndk
+
+      - name: Build resetprop only
+        run: |
+          python3 build.py native
+        env:
+          ANDROID_NDK_HOME: ${{ env.ANDROID_NDK_HOME }}
+          PATH: ${{ env.ANDROID_NDK_HOME }}/toolchains/llvm/prebuilt/linux-x86_64/bin:$PATH
+
+      - name: Upload resetprop binary
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ github.sha }}
-          path: out
-          compression-level: 9
+          name: resetprop
+          path: out/arm64-v8a/resetprop
