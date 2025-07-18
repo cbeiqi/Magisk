@@ -319,6 +319,7 @@ val = argv[1];               \
 stop_parse = true;           \
 
 int resetprop_main(int argc, char *argv[]) {
+        puts("test");
     PropFlags flags;
     char *argv0 = argv[0];
     set_log_level_state(LogLevel::Debug, false);
